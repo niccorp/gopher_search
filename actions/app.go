@@ -3,9 +3,7 @@ package actions
 import (
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/middleware"
-	"github.com/gobuffalo/buffalo/middleware/ssl"
 	"github.com/gobuffalo/envy"
-	"github.com/unrolled/secure"
 
 	"github.com/gobuffalo/buffalo/middleware/csrf"
 	"github.com/gobuffalo/buffalo/middleware/i18n"
@@ -28,11 +26,13 @@ func App() *buffalo.App {
 			Env:         ENV,
 			SessionName: "_gopher_search_session",
 		})
-		// Automatically redirect to SSL
-		app.Use(ssl.ForceSSL(secure.Options{
-			SSLRedirect:     ENV == "production",
-			SSLProxyHeaders: map[string]string{"X-Forwarded-Proto": "https"},
-		}))
+		/*
+			// Automatically redirect to SSL
+			app.Use(ssl.ForceSSL(secure.Options{
+				SSLRedirect:     ENV == "production",
+				SSLProxyHeaders: map[string]string{"X-Forwarded-Proto": "https"},
+			}))
+		*/
 
 		if ENV == "development" {
 			app.Use(middleware.ParameterLogger)

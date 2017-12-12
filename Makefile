@@ -8,4 +8,4 @@ import_sql: process_sql
 	psql gopher_search_development < ./database.sql
 
 build:
-	buffalo build
+	CGO_ENABLED=0 GOOS=linux buffalo build
