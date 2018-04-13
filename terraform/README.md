@@ -1,67 +1,99 @@
-# Example application
+# terraform-azurerm-demo
 
-## Setup
-Set your environment variables for your Azure account, if you do not already have these credentials they can be obtained by using the command line [https://www.terraform.io/docs/providers/azurerm/authenticating_via_service_principal.html](https://www.terraform.io/docs/providers/azurerm/authenticating_via_service_principal.html)
+This is a simple Terraform AzureRM provider demo. In it's default state, this demo will use a mixture of modules from the [Terraform Module Registry for Azure](http://registry.terraform.io/browse?provider=azurerm&verified=true) and custom Terraform code to deploy a demo application with a publicly accessible frontend IP that consists of:
 
-```bash
-export TF_VAR_subscription_id="xxxxxxxxxxxxxx"
-export TF_VAR_client_id="xxxxxxxxxxxxxx"
-export TF_VAR_client_secret="xxxxxxxxxxxxxx"
-export TF_VAR_tenant_id="xxxxxxxxxxxxxx"
-```
+* an Azure Virtual Network (`10.0.0.0/16`)
+* a public subnet within that Virtual Network (`10.0.1.0/24`)
+* a private subnet within the Virtual Network (`10.0.2.0/16`)
+* an Azure Load Balancer with a public IP
+* an Azure Virtual Machine Scale Set (with three nodes in public subnet, private IPs only) running an application behind the load balancer
+* a jumpbox/bastion server within the public network with a public IP
+* Network Security Groups and rules necessary to allow HTTP traffic to the Scale Set/web tier as well as port 22 traffic for ssh to the jumpbox/bastion server
+* a PostgreSQL database server in the private subnet with rules necessary for communication from public subnet/web tier
+* a [demo application](https://github.com/nicholasjackson/gopher_search) created by [Nicolas Jackson](https://github.com/nicholasjackson) deployed to the multi-tier environment
 
-Run `terraform init` to fetch plugins and modules
+Prerequisites
+=============
+First, some prerequisites - you will need to have environment variables set for the following:
 
-```bash
-$ terraform init
-Initializing modules...
-- module.network
-  Found version 1.1.1 of Azure/network/azurerm on registry.terraform.io
-  Getting source "Azure/network/azurerm"
-- module.loadbalancer
-  Found version 1.0.1 of Azure/loadbalancer/azurerm on registry.terraform.io
-  Getting source "Azure/loadbalancer/azurerm"
-- module.computegroup
-  Found version 1.1.0 of Azure/computegroup/azurerm on registry.terraform.io
-  Getting source "Azure/computegroup/azurerm"
-- module.computegroup.os
-  Getting source "./os"
+* `TF_VAR_subscription_id`
+* `TF_VAR_client_id`
+* `TF_VAR_client_secret`
+* `TF_VAR_tenant_id`
+* `TF_VAR_ssh_key_private`
+* `TF_VAR_ssh_key_public`
 
-Initializing provider plugins...
-- Checking for available provider plugins on https://releases.hashicorp.com...
-- Downloading plugin for provider "azurerm" (0.3.3)...
-
-Terraform has been successfully initialized!
-
-You may now begin working with Terraform. Try running "terraform plan" to see
-any changes that are required for your infrastructure. All Terraform commands
-should now work.
-
-If you ever set or change modules or backend configuration for Terraform,
-rerun this command to reinitialize your working directory. If you forget, other
-commands will detect it and remind you to do so if necessary.
-```
-
-## Running Terraform
-Before applying changes run a `terraform plan` to see what changes will be made by terraform, this is kind of a dry run which will not commit changes
+To easily set these environment variables for an active terminal session, you can create and source a bash script. Here is an example of the contents:
 
 ```bash
-$ terraform plan
-#...
-
-$ terraform apply
-#...
-
-azurerm_virtual_machine.jumpbox: Creation complete after 9m6s (ID: /subscriptions/c0a607b2-6372-4ef3-abdb-...rosoft.Compute/virtualMachines/jumpbox)
-
-Apply complete! Resources: 3 added, 1 changed, 0 destroyed.
-
-Outputs:
-
-bastion_host = 104.42.27.44
+export TF_VAR_subscription_id="xxxxxxx"
+export TF_VAR_client_id="xxxxxx"
+export TF_VAR_client_secret="xxxxxx"
+export TF_VAR_tenant_id="xxxxxxx"
+export TF_VAR_ssh_key_private="$(cat ~/.ssh/tfaz_id_rsa)"
+export TF_VAR_ssh_key_public="$(cat ~/.ssh/tfaz_id_rsa.pub)"
 ```
 
-![](resources.png)
+You will also need to have the private and public ssh key files created on your local system. By default, the public ssh key will be pulled from `~/.ssh/tfaz_id_rsa.pub` if using the example above to set your environment variables. Be sure to set these values to the location where your public and private ssh key exist that you'd like to use for this demo.
 
-## Accessing the cluster
-The cluster is not available for public access without going through the bastion host.  To obtain the ip address of the bastion host you can use the following command `terraform output bastion_host`.
+Generating Public and Private Keys
+==================================
+If you'd like to generate an ssh key pair for this demo, you can run the command below to do so. Feel free to change `~/.ssh/tfaz_id_rsa` to whatever ssh key pair location and name you'd like - but be sure have this location set in your `TF_VAR_ssh_key_public` and `TF_VAR_ssh_key_private` environment variables as mentioned in the prerequisites above!
+
+```bash
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/tfaz_id_rsa
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in ~/.ssh/tfaz_id_rsa.
+Your public key has been saved in ~/.ssh/tfaz_id_rsa.pub.
+The key fingerprint is:
+SHA256:urRTPWzDLZqNqovY//S80wLudutgocF5PvL1khlwJGs user@hostname.local
+The keys randomart image is:
++---[RSA 4096]----+
+|                 |
+|      . .        |
+|       +         |
+|   . .E .        |
+|    +.ooS+ .     |
+|     =.oo O .    |
+|    o.Oo.@ +     |
+| o . *+O@.o      |
+|. o.+*B=**.      |
++----[SHA256]-----+
+```
+
+**IMPORTANT** Do not upload your ssh private key file to a public location such as GitHub! **IMPORTANT**
+
+
+Deploying the Demo
+==================
+To deploy this on Azure, make sure you've got the prerequisites covered, [Terraform](https://www.terraform.io/) installed locally (at least version `0.11.1`), and the environment variables set for the azurerm provider. You'll also need the ssh key locations configured as environment variables as we have already mentioned. After that, it's a matter of performing the following:
+
+1. Make sure that your prerequisites are in place and that your credentials work on Azure!
+2. `git clone` this repository and change directory to it
+3. Run `terraform init` within the repository folder to pull down modules and providers needed
+4. Run `terraform plan` to see what changes it will make and double check there are no issues with the code
+5. If you're happy with the changes that will be applied, run `terraform apply`
+6. When prompted, type `yes` if you agree to continue
+7. Your environment will be provisioned!
+
+Once the nodes are healthy in the Load Balancer, you should be able to access the application via the public IP of the Load Balancer on `port 80`. This IP address is configured as an output in `outputs.tf`, so you will see it in your terminal as an output at the very end of your `terraform apply` run as it completes. You should also be able to access the jumpbox/bastion server on it's public IP via ssh on `port 22` using the private key specified in your Terraform configuration (the private key from the key pair created earlier for this demo). The jumpbox/bastion server's public IP is also configured as an output and will display at the end of the `terraform apply` run as well.
+
+That's it! Use this code as a sample or extend it to fit your own needs! Thanks for checking out the demo! =]
+
+
+Teardown
+========
+When you're ready to bring this infrastructure down, simply run `terraform destroy` in the repository folder (or the folder where the Terraform configuration or .tf files reside). ***BE SURE TO DOUBLE CHECK THE RESOURCES THAT WILL BE DESTROYED BY THIS COMMAND BEFORE TYPING `yes` TO CONTINUE!!!***
+
+
+Special Thanks
+==============
+* [Ashley McNamara](https://github.com/ashleymcnamara) for her amazing [gopher images](https://github.com/ashleymcnamara/gophers) used by the [demo application](https://github.com/nicholasjackson/gopher_search)! Find Ashley on Twitter [@ashleymcnamara](https://twitter.com/ashleymcnamara)
+
+
+Authors
+=======
+* [Nicolas Jackson](https://github.com/nicholasjackson) - Twitter [@sheriffjackson](https://twitter.com/sheriffjackson)
+* [Zachary Deptawa](https://github.com/zdeptawa) - Twitter [@zdeptawa](https://twitter.com/zdeptawa)
