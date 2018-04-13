@@ -1,0 +1,9 @@
+development:
+  dialect: postgres
+  database: gopher_search_development
+  host: 127.0.0.1
+  //user: {{ with secret "database/creds/gopher-search" }}{{ .Data.username }}{{ end }} 
+  //password: {{ with secret "database/creds/gopher-search" }}{{ .Data.password }}{{ end }} 
+  user: postgres
+  password: postgres
+  pool: 5

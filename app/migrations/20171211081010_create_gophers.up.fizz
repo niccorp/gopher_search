@@ -1,0 +1,3 @@
+create_table("gophers", func(t) {
+	t.Column("id", "uuid", {"primary": true})
+})

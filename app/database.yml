@@ -1,0 +1,9 @@
+development:
+  dialect: postgres
+  database: gopher_search_development
+  host: 127.0.0.1
+  //user: v-token-gopher-s-y517x93ttpqx20wtu5v9-1523539816 
+  //password: A1a-6p1t4rpqp0w5pt5u 
+  user: postgres
+  password: postgres
+  pool: 5
