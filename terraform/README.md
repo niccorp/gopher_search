@@ -1,67 +1,56 @@
-# Example application
+# terraform-azurerm-demo
+This is a simple Terraform AzureRM provider demo.
 
-## Setup
-Set your environment variables for your Azure account, if you do not already have these credentials they can be obtained by using the command line [https://www.terraform.io/docs/providers/azurerm/authenticating_via_service_principal.html](https://www.terraform.io/docs/providers/azurerm/authenticating_via_service_principal.html)
+To deploy this on Azure, you will need to have environment variables set for
+ARM_CLIENT_ID, ARM_CLIENT_SECRET, ARM_SUBSCRIPTION_ID, and ARM_TENANT_ID.
+You will also need to have the ssh key file created on your local system.
+
+You will also need to generate a public and private key for use by the system.
+
+## Generating public and private keys
+```bash
+$ ssh-keygen -t rsa -b 4096 -f tfaz_id_rsa
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in tfaz_id_rsa.
+Your public key has been saved in tfaz_id_rsa.pub.
+The key fingerprint is:
+SHA256:vnc65Z6gIbT6pi+MIF+p2KtoDszEd3sPcl/13EIulzE nicj@Nics-MacBook-Pro.local
+The key's randomart image is:
++---[RSA 4096]----+
+|                 |
+|                 |
+|                 |
+|.                |
+| o . o. S    .E  |
+|* . +..o    ooo+.|
+|oB = oo+o .+. =o.|
+|+.= o.=.+++.o+ . |
+|=o..o*o o+.=o    |
++----[SHA256]-----+
+```
+Do not upload your private key files to a public location such as github
+
+## Setting environment variables
+The Terraform config requires certain variables to be set such as the subscription id for the provider and the public and private key information.
 
 ```bash
-export TF_VAR_subscription_id="xxxxxxxxxxxxxx"
-export TF_VAR_client_id="xxxxxxxxxxxxxx"
-export TF_VAR_client_secret="xxxxxxxxxxxxxx"
-export TF_VAR_tenant_id="xxxxxxxxxxxxxx"
+export TF_VAR_subscription_id="xxxxxxx"
+export TF_VAR_client_id="xxxxxx"
+export TF_VAR_client_secret="xxxxxx"
+export TF_VAR_tenant_id="xxxxxxx"
+export TF_VAR_ssh_key_private="$(cat ./tfaz_id_rsa)"
+export TF_VAR_ssh_key_public="$(cat ./tfaz_id_rsa.pub)"
 ```
 
-Run `terraform init` to fetch plugins and modules
+The private key corresponds to the public key in this repo **PLEASE DO NOT USE THIS KEY FOR PRODUCTION SYSTEMS**
+
+
+Afterward, simply:
 
 ```bash
-$ terraform init
-Initializing modules...
-- module.network
-  Found version 1.1.1 of Azure/network/azurerm on registry.terraform.io
-  Getting source "Azure/network/azurerm"
-- module.loadbalancer
-  Found version 1.0.1 of Azure/loadbalancer/azurerm on registry.terraform.io
-  Getting source "Azure/loadbalancer/azurerm"
-- module.computegroup
-  Found version 1.1.0 of Azure/computegroup/azurerm on registry.terraform.io
-  Getting source "Azure/computegroup/azurerm"
-- module.computegroup.os
-  Getting source "./os"
-
-Initializing provider plugins...
-- Checking for available provider plugins on https://releases.hashicorp.com...
-- Downloading plugin for provider "azurerm" (0.3.3)...
-
-Terraform has been successfully initialized!
-
-You may now begin working with Terraform. Try running "terraform plan" to see
-any changes that are required for your infrastructure. All Terraform commands
-should now work.
-
-If you ever set or change modules or backend configuration for Terraform,
-rerun this command to reinitialize your working directory. If you forget, other
-commands will detect it and remind you to do so if necessary.
+terraform init
+terraform plan
+terraform apply
 ```
-
-## Running Terraform
-Before applying changes run a `terraform plan` to see what changes will be made by terraform, this is kind of a dry run which will not commit changes
-
-```bash
-$ terraform plan
-#...
-
-$ terraform apply
-#...
-
-azurerm_virtual_machine.jumpbox: Creation complete after 9m6s (ID: /subscriptions/c0a607b2-6372-4ef3-abdb-...rosoft.Compute/virtualMachines/jumpbox)
-
-Apply complete! Resources: 3 added, 1 changed, 0 destroyed.
-
-Outputs:
-
-bastion_host = 104.42.27.44
-```
-
-![](resources.png)
-
-## Accessing the cluster
-The cluster is not available for public access without going through the bastion host.  To obtain the ip address of the bastion host you can use the following command `terraform output bastion_host`.

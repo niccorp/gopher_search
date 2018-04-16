@@ -4,7 +4,6 @@ resource "azurerm_public_ip" "jumpbox" {
   resource_group_name          = "${azurerm_resource_group.default.name}"
   public_ip_address_allocation = "static"
   domain_name_label            = "${var.resource_group_name}-ssh"
-  depends_on                   = ["module.network"]
 
   tags {
     environment = "dev"
@@ -32,9 +31,10 @@ resource "azurerm_network_security_rule" "ssh_access" {
 }
 
 resource "azurerm_network_interface" "jumpbox" {
-  name                = "jumpbox-nic"
-  location            = "${var.location}"
-  resource_group_name = "${azurerm_resource_group.default.name}"
+  name                      = "jumpbox-nic"
+  location                  = "${var.location}"
+  resource_group_name       = "${azurerm_resource_group.default.name}"
+  network_security_group_id = "${azurerm_network_security_group.jumpbox.id}"
 
   ip_configuration {
     name                          = "IPConfiguration"
@@ -53,7 +53,7 @@ resource "azurerm_virtual_machine" "jumpbox" {
   location              = "${var.location}"
   resource_group_name   = "${azurerm_resource_group.default.name}"
   network_interface_ids = ["${azurerm_network_interface.jumpbox.id}"]
-  vm_size               = "Standard_DS1_v2"
+  vm_size               = "Standard_DS1_v3"
 
   storage_image_reference {
     publisher = "Canonical"
@@ -80,7 +80,7 @@ resource "azurerm_virtual_machine" "jumpbox" {
 
     ssh_keys {
       path     = "/home/azureuser/.ssh/authorized_keys"
-      key_data = "${file("~/.ssh/server_rsa.pub")}"
+      key_data = "${var.ssh_key_public}"
     }
   }
 
