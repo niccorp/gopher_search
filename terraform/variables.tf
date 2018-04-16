@@ -34,5 +34,3 @@ variable "db_pass" {
 }
 
 variable "ssh_key_public" {}
-
-variable "ssh_key_private" {}
