@@ -3,10 +3,10 @@ resource "azurerm_public_ip" "jumpbox" {
   location                     = "${var.location}"
   resource_group_name          = "${azurerm_resource_group.default.name}"
   public_ip_address_allocation = "static"
-  domain_name_label            = "${var.resource_group_name}-ssh"
+  domain_name_label            = "${var.namespace}-ssh-${var.env}"
 
   tags {
-    environment = "dev"
+    environment = "${var.env}"
   }
 }
 
@@ -31,7 +31,7 @@ resource "azurerm_network_security_rule" "ssh_access" {
 }
 
 resource "azurerm_network_interface" "jumpbox" {
-  name                      = "jumpbox-nic"
+  name                      = "jumpbox-ssh"
   location                  = "${var.location}"
   resource_group_name       = "${azurerm_resource_group.default.name}"
   network_security_group_id = "${azurerm_network_security_group.jumpbox.id}"
@@ -44,16 +44,16 @@ resource "azurerm_network_interface" "jumpbox" {
   }
 
   tags {
-    environment = "dev"
+    environment = "${var.env}"
   }
 }
 
 resource "azurerm_virtual_machine" "jumpbox" {
-  name                  = "jumpbox"
-  location              = "${var.location}"
-  resource_group_name   = "${azurerm_resource_group.default.name}"
-  network_interface_ids = ["${azurerm_network_interface.jumpbox.id}"]
-  vm_size               = "Standard_DS1_v3"
+  name                          = "jumpbox"
+  location                      = "${var.location}"
+  resource_group_name           = "${azurerm_resource_group.default.name}"
+  network_interface_ids         = ["${azurerm_network_interface.jumpbox.id}"]
+  vm_size                       = "Standard_DS1_v2"
   delete_os_disk_on_termination = true
 
   storage_image_reference {
@@ -86,6 +86,6 @@ resource "azurerm_virtual_machine" "jumpbox" {
   }
 
   tags {
-    environment = "dev"
+    environment = "${var.env}"
   }
 }

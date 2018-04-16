@@ -26,12 +26,15 @@ First, some prerequisites - you will need to have environment variables set for 
 To easily set these environment variables for an active terminal session, you can create and source a bash script. Here is an example of the contents:
 
 ```bash
-export TF_VAR_subscription_id="xxxxxxx"
-export TF_VAR_client_id="xxxxxx"
-export TF_VAR_client_secret="xxxxxx"
-export TF_VAR_tenant_id="xxxxxxx"
+export ARM_TENANT_ID=xxxxxx
+export ARM_SUBSCRIPTION_ID=xxxxxxx
+export ARM_CLIENT_ID=xxxxxx
+export ARM_CLIENT_SECRET=xxxxxxx
+
 export TF_VAR_ssh_key_private="$(cat ~/.ssh/tfaz_id_rsa)"
 export TF_VAR_ssh_key_public="$(cat ~/.ssh/tfaz_id_rsa.pub)"
+
+export ATLAS_TOKEN="xxxxxxx" 
 ```
 
 You will also need to have the private and public ssh key files created on your local system. By default, the public ssh key will be pulled from `~/.ssh/tfaz_id_rsa.pub` if using the example above to set your environment variables. Be sure to set these values to the location where your public and private ssh key exist that you'd like to use for this demo.

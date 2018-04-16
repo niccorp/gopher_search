@@ -1,13 +1,14 @@
+variable "env" {
+  description = "Environment name"
+  default     = "dev"
+}
+
+variable "namespace" {
+  default = "tfaz"
+}
+
 variable "location" {
   default = "southcentralus"
-}
-
-variable "resource_group_name" {
-  default = "tfaz-rg-dev"
-}
-
-variable "sg_name" {
-  default = "tfaz-nsg-dev"
 }
 
 # This is the default variable set in the network module. I left this commented

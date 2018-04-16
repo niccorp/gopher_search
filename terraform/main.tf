@@ -7,11 +7,11 @@ terraform {
 }
 
 resource "azurerm_resource_group" "default" {
-  name     = "${var.resource_group_name}"
+  name     = "${var.namespace}-rg-${var.env}"
   location = "${var.location}"
 
   tags {
-    environment = "dev"
+    environment = "${var.env}"
   }
 }
 
@@ -21,8 +21,8 @@ module "network" "demo-network" {
   resource_group_name = "${azurerm_resource_group.default.name}"
   subnet_prefixes     = "${var.subnet_prefixes}"
   subnet_names        = "${var.subnet_names}"
-  vnet_name           = "tfaz-vnet"
-  sg_name             = "${var.sg_name}"
+  vnet_name           = "${var.namespace}-vnet-${var.env}"
+  sg_name             = "${var.namespace}-sg-${var.env}"
 }
 
 module "loadbalancer" "demo-lb" {
@@ -30,20 +30,20 @@ module "loadbalancer" "demo-lb" {
   source              = "github.com/nicholasjackson/terraform-azurerm-loadbalancer"
   resource_group_name = "${azurerm_resource_group.default.name}"
   location            = "${var.location}"
-  prefix              = "tfaz"
+  prefix              = "${var.namespace}-${var.env}"
 
   lb_port = {
     http = ["80", "Tcp", "3000"]
   }
 
-  frontend_name = "tfaz-public-ip"
+  frontend_name = "${var.namespace}-public-ip-${var.env}"
 }
 
 module "computegroup" "demo-web" {
   source                                 = "github.com/nicholasjackson/terraform-azurerm-computegroup"
   resource_group_name                    = "${azurerm_resource_group.default.name}"
   location                               = "${var.location}"
-  vmscaleset_name                        = "tfaz-vmss"
+  vmscaleset_name                        = "${var.namespace}-vmss-${var.env}"
   vm_size                                = "Standard_A0"
   nb_instance                            = 3
   vm_os_simple                           = "UbuntuServer"
