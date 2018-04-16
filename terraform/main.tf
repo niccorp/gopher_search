@@ -77,7 +77,7 @@ resource "azurerm_network_security_rule" "allowInternet443" {
   name                        = "allow-internet-port-443"
   direction                   = "Inbound"
   access                      = "Allow"
-  priority                    = 200
+  priority                    = 201
   source_address_prefix       = "*"
   source_port_range           = "*"
   destination_address_prefix  = "*"
