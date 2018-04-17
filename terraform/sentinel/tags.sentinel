@@ -1,0 +1,14 @@
+import "tfplan"
+
+mandatory_tags = [
+  "environment",
+  "application"
+]
+
+main = rule {
+  all tfplan.resources.azurerm_resource_group as _, groups {
+    all groups as _, r {
+      r.applied.tags
+    }
+  }
+}
