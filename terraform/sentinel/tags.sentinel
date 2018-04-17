@@ -2,13 +2,28 @@ import "tfplan"
 
 mandatory_tags = [
   "environment",
-  "application"
+  "application",
 ]
 
+getTags = func(group) {
+  tags = keys(group.applied.tags)
+
+  // check tags contains mandatory tags
+  for mandatory_tags as t {
+  	if t not in tags {
+    	print("missing tag:", t)
+      return false
+    }
+  }
+
+  return true
+}
+
 main = rule {
+  // valid all resource groups contain the mandatory tags
   all tfplan.resources.azurerm_resource_group as _, groups {
-    all groups as _, r {
-      r.applied.tags
+    all groups as _, group {
+			getTags(group)
     }
   }
 }
