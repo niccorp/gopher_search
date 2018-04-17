@@ -73,20 +73,6 @@ resource "azurerm_network_security_rule" "allowInternet80" {
   network_security_group_name = "${module.network.security_group_name}"
 }
 
-resource "azurerm_network_security_rule" "allowInternet443" {
-  name                        = "allow-internet-port-443"
-  direction                   = "Inbound"
-  access                      = "Allow"
-  priority                    = 201
-  source_address_prefix       = "*"
-  source_port_range           = "*"
-  destination_address_prefix  = "*"
-  destination_port_range      = "443"
-  protocol                    = "Tcp"
-  resource_group_name         = "${azurerm_resource_group.default.name}"
-  network_security_group_name = "${module.network.security_group_name}"
-}
-
 resource "azurerm_network_security_rule" "allowInternet3000" {
   name                        = "allow-internet-port-3000"
   direction                   = "Inbound"
