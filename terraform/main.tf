@@ -13,6 +13,7 @@ resource "azurerm_resource_group" "default" {
 
   tags {
     environment = "${var.env}"
+    application = "gopher_search"
   }
 }
 
