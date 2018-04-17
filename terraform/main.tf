@@ -12,8 +12,7 @@ resource "azurerm_resource_group" "default" {
   location = "${var.location}"
 
   tags {
-    environment  = "${var.env}"
-    applicationz = "gopher-search"
+    environment = "${var.env}"
   }
 }
 
